@@ -1,0 +1,156 @@
+/*
+ * rerate_usage.pc
+ *
+ * Simplified synthetic Pro*C program used by the Context Recovery project.
+ * The batch environment establishes the Oracle session before execution.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sqlca.h>
+
+#define ACCOUNT_TYPE_CORPORATE "CORPORATE"
+#define MIGRATION_SOURCE_LEGACY "LEGACY_BILLER"
+#define INVOICE_STATUS_FINALIZED "FINALIZED"
+#define EXCEPTION_REASON "LEGACY_CORP_FINAL_INVOICE"
+
+EXEC SQL BEGIN DECLARE SECTION;
+
+char v_business_date[11];
+
+long v_usage_id;
+char v_account_type[21];
+char v_migration_source[31];
+char v_invoice_status[21];
+
+EXEC SQL END DECLARE SECTION;
+
+static int requires_manual_review(void)
+{
+    return strcmp(v_account_type, ACCOUNT_TYPE_CORPORATE) == 0
+        && strcmp(v_migration_source, MIGRATION_SOURCE_LEGACY) == 0
+        && strcmp(v_invoice_status, INVOICE_STATUS_FINALIZED) == 0;
+}
+
+static void route_to_manual_review(void)
+{
+    /*
+     * Migration safeguard:
+     * finalized legacy corporate invoices require operational review.
+     */
+    EXEC SQL INSERT INTO rerate_exception
+    (
+        exception_id,
+        usage_id,
+        reason_code,
+        status,
+        created_at
+    )
+    VALUES
+    (
+        rerate_exception_seq.NEXTVAL,
+        :v_usage_id,
+        EXCEPTION_REASON,
+        'OPEN',
+        SYSDATE
+    );
+
+    EXEC SQL UPDATE usage_event
+       SET status = 'MANUAL_REVIEW',
+           last_updated = SYSDATE
+     WHERE usage_id = :v_usage_id;
+}
+
+static void rerate_usage_record(void)
+{
+    /*
+     * Actual pricing logic is outside this synthetic example.
+     */
+    EXEC SQL UPDATE usage_event
+       SET status = 'RATED',
+           last_updated = SYSDATE
+     WHERE usage_id = :v_usage_id;
+}
+
+int main(int argc, char **argv)
+{
+    long rerated_count = 0;
+    long manual_review_count = 0;
+
+    if (argc != 2)
+    {
+        fprintf(stderr, "Usage: %s YYYY-MM-DD\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    strncpy(v_business_date, argv[1], sizeof(v_business_date) - 1);
+    v_business_date[sizeof(v_business_date) - 1] = '\0';
+
+    EXEC SQL WHENEVER SQLERROR GOTO sql_error;
+
+    EXEC SQL DECLARE rejected_usage_cursor CURSOR FOR
+        SELECT ue.usage_id,
+               RTRIM(ap.account_type),
+               RTRIM(ap.migration_source),
+               RTRIM(inv.status)
+          FROM usage_event ue
+          JOIN account_profile ap
+            ON ap.account_id = ue.account_id
+          JOIN invoice inv
+            ON inv.invoice_id = ue.invoice_id
+         WHERE ue.status = 'REJECTED'
+           AND TRUNC(ue.received_at) <=
+               TO_DATE(:v_business_date, 'YYYY-MM-DD');
+
+    EXEC SQL OPEN rejected_usage_cursor;
+
+    for (;;)
+    {
+        EXEC SQL FETCH rejected_usage_cursor
+             INTO :v_usage_id,
+                  :v_account_type,
+                  :v_migration_source,
+                  :v_invoice_status;
+
+        if (sqlca.sqlcode == 1403)
+        {
+            break;
+        }
+
+        if (requires_manual_review())
+        {
+            route_to_manual_review();
+            manual_review_count++;
+        }
+        else
+        {
+            rerate_usage_record();
+            rerated_count++;
+        }
+    }
+
+    EXEC SQL CLOSE rejected_usage_cursor;
+    EXEC SQL COMMIT;
+
+    printf(
+        "Rerated: %ld, routed to manual review: %ld\n",
+        rerated_count,
+        manual_review_count
+    );
+
+    return EXIT_SUCCESS;
+
+sql_error:
+    fprintf(
+        stderr,
+        "Oracle error %ld: %.70s\n",
+        sqlca.sqlcode,
+        sqlca.sqlerrm.sqlerrmc
+    );
+
+    EXEC SQL WHENEVER SQLERROR CONTINUE;
+    EXEC SQL ROLLBACK;
+
+    return EXIT_FAILURE;
+}
