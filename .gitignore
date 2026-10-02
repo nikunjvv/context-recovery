@@ -1,0 +1,9 @@
+# Python-generated cache files
+__pycache__/
+*.py[cod]
+
+# Generated ingestion artifacts
+artifacts/*.jsonl
+
+# Preserve the otherwise-empty artifacts directory
+!artifacts/.gitkeep
