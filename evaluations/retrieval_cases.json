@@ -1,0 +1,56 @@
+[
+  {
+    "id": "hidden_rule_why",
+    "query": "Why are finalized legacy corporate invoices sent to manual review?",
+    "required_sources": [
+      "change_records/CR-2009-017.md",
+      "src/rerate_usage.pc"
+    ],
+    "should_abstain": false
+  },
+  {
+    "id": "exact_conditions",
+    "query": "What conditions cause a rejected usage record to be routed to manual review?",
+    "required_sources": [
+      "src/rerate_usage.pc"
+    ],
+    "should_abstain": false
+  },
+  {
+    "id": "runbook_conflict",
+    "query": "Does the operations runbook accurately describe the corporate rerating exception?",
+    "required_sources": [
+      "docs/operations_runbook.md",
+      "src/rerate_usage.pc"
+    ],
+    "should_abstain": false
+  },
+  {
+    "id": "batch_invocation",
+    "query": "Which program does the nightly rerating script invoke?",
+    "required_sources": [
+      "scripts/nightly_rerate.sh"
+    ],
+    "should_abstain": false
+  },
+  {
+    "id": "removal_risk",
+    "query": "What risks could occur if the legacy corporate rerating exception is removed?",
+    "required_sources": [
+      "change_records/CR-2009-017.md"
+    ],
+    "should_abstain": false
+  },
+  {
+    "id": "unsupported_phone_number",
+    "query": "What is the customer service phone number?",
+    "required_sources": [],
+    "should_abstain": true
+  },
+  {
+    "id": "unsupported_refund_policy",
+    "query": "What is the company's customer refund policy?",
+    "required_sources": [],
+    "should_abstain": true
+  }
+]
