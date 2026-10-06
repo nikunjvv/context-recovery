@@ -7,3 +7,5 @@ artifacts/*.jsonl
 
 # Preserve the otherwise-empty artifacts directory
 !artifacts/.gitkeep
+
+.venv/
