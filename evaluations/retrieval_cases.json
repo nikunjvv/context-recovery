@@ -52,5 +52,61 @@
     "query": "What is the company's customer refund policy?",
     "required_sources": [],
     "should_abstain": true
+  },
+    {
+    "id": "historical_defect_paraphrase",
+    "query": "What defect caused the migration safeguard to be introduced?",
+    "required_sources": [
+      "change_records/CR-2009-017.md"
+    ],
+    "should_abstain": false
+  },
+  {
+    "id": "persistent_changes_paraphrase",
+    "query": "When the safeguard applies, which persistent records and statuses are changed?",
+    "required_sources": [
+      "src/rerate_usage.pc"
+    ],
+    "should_abstain": false
+  },
+  {
+    "id": "retirement_requirements_paraphrase",
+    "query": "What evidence and approvals are needed before retiring the temporary control?",
+    "required_sources": [
+      "change_records/CR-2009-017.md"
+    ],
+    "should_abstain": false
+  },
+  {
+    "id": "cursor_exhaustion_paraphrase",
+    "query": "How does the process stop when the cursor has no more rejected usage?",
+    "required_sources": [
+      "src/rerate_usage.pc"
+    ],
+    "should_abstain": false
+  },
+  {
+    "id": "unsupported_manual_review_sla",
+    "query": "What is the SLA for completing manual review of a rerating exception?",
+    "required_sources": [],
+    "should_abstain": true
+  },
+  {
+    "id": "unsupported_customer_api",
+    "query": "Which API publishes rerating results to the customer mobile application?",
+    "required_sources": [],
+    "should_abstain": true
+  },
+  {
+    "id": "unsupported_prepaid_roaming",
+    "query": "How are prepaid roaming usage records rerated?",
+    "required_sources": [],
+    "should_abstain": true
+  },
+  {
+    "id": "unsupported_disaster_recovery",
+    "query": "What is the disaster recovery RTO for the nightly rerating batch?",
+    "required_sources": [],
+    "should_abstain": true
   }
 ]
