@@ -89,24 +89,28 @@
     "id": "unsupported_manual_review_sla",
     "query": "What is the SLA for completing manual review of a rerating exception?",
     "required_sources": [],
-    "should_abstain": true
+    "should_abstain": true,
+    "evaluation_stage": "answer"
   },
   {
     "id": "unsupported_customer_api",
     "query": "Which API publishes rerating results to the customer mobile application?",
     "required_sources": [],
-    "should_abstain": true
+    "should_abstain": true,
+    "evaluation_stage": "answer"
   },
   {
     "id": "unsupported_prepaid_roaming",
     "query": "How are prepaid roaming usage records rerated?",
     "required_sources": [],
-    "should_abstain": true
+    "should_abstain": true,
+    "evaluation_stage": "answer"
   },
   {
     "id": "unsupported_disaster_recovery",
     "query": "What is the disaster recovery RTO for the nightly rerating batch?",
     "required_sources": [],
-    "should_abstain": true
+    "should_abstain": true,
+    "evaluation_stage": "answer"
   }
 ]

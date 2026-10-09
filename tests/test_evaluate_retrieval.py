@@ -61,10 +61,53 @@ class RetrievalEvaluationTests(unittest.TestCase):
 
         for case in self.cases:
             if case["should_abstain"]:
-                self.assertEqual(
-                    [],
-                    case["required_sources"],
-                )
+                self.assertEqual([],case["required_sources"],)
+
+    def test_evaluation_stages_are_supported(
+        self,
+    ) -> None:
+        """Cases may target retrieval or answer validation."""
+
+        allowed_stages = {
+            "retrieval",
+            "answer",
+        }
+
+        for case in self.cases:
+            stage = case.get(
+                "evaluation_stage",
+                "retrieval",
+            )
+
+            self.assertIn(
+                stage,
+                allowed_stages,
+            )
+
+    def test_answer_stage_cases_are_unanswerable(
+        self,
+    ) -> None:
+        """Answer-validation cases must expect abstention."""
+
+        answer_cases = [
+            case
+            for case in self.cases
+            if case.get(
+                "evaluation_stage",
+                "retrieval",
+            ) == "answer"
+        ]
+
+        self.assertEqual(4, len(answer_cases))
+
+        for case in answer_cases:
+            self.assertTrue(
+                case["should_abstain"]
+            )
+            self.assertEqual(
+                [],
+                case["required_sources"],
+            )
 
     def test_required_source_files_exist(self) -> None:
         """

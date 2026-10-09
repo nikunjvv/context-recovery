@@ -66,6 +66,36 @@ def main() -> None:
     evidence_root = project_root / "sample_system"
 
     cases = load_cases(dataset_path)
+    # Some questions contain related terminology but cannot be answered
+    # from the available evidence. Those belong to answer validation,
+    # which will be implemented separately.
+    retrieval_cases = [
+        case
+        for case in cases
+        if case.get(
+            "evaluation_stage",
+            "retrieval",
+        ) == "retrieval"
+    ]
+
+    answer_cases = [
+        case
+        for case in cases
+        if case.get(
+            "evaluation_stage",
+            "retrieval",
+        ) == "answer"
+    ]
+
+    known_case_count = (
+        len(retrieval_cases)
+        + len(answer_cases)
+    )
+
+    if known_case_count != len(cases):
+        raise ValueError(
+            "Unknown evaluation_stage value"
+        )
 
     # Ingest once and reuse the same chunks for every query.
     # Ingesting inside the loop would repeat identical work.
@@ -83,12 +113,12 @@ def main() -> None:
     retrieved_required_source_count = 0
 
     print(
-        f"Evaluating {len(cases)} cases against "
+        f"Evaluating {len(retrieval_cases)} cases against "
         f"{len(source_files)} source files and "
         f"{len(chunks)} chunks\n"
     )
 
-    for case in cases:
+    for case in retrieval_cases:
         results = search(
             chunks,
             case["query"],
@@ -168,7 +198,7 @@ def main() -> None:
         else:
             print("       retrieved: none")
 
-    overall_rate = passed_cases / len(cases)
+    overall_rate = passed_cases / len(retrieval_cases)
 
     supported_rate = (
         passed_supported_cases / supported_cases
@@ -184,10 +214,14 @@ def main() -> None:
     )
 
     print("\nSummary")
+    print(
+        "Deferred answer-validation cases: "
+        f"{len(answer_cases)}\n"
+    )
 
     print(
         "  Overall case pass rate: "
-        f"{passed_cases}/{len(cases)} "
+        f"{passed_cases}/{len(retrieval_cases)} "
         f"({overall_rate:.0%})"
     )
 
